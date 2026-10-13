@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบสมาชิก Workshop</title>
+    <style>
+        body { font-family: sans-serif; margin: 50px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 300px; }
+        input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px; background: #007bff; color: white; border: none; width: 100%; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; margin-top: 10px; }
+        .btn-danger:hover { background: #b02a37; }
+        #result { margin-top: 10px; font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h2>ระบบสมาชิก Node.js & MongoDB</h2>
+    
+    <!-- ส่วนฟอร์มสมัครและเข้าสู่ระบบ (แสดงตอนยังไม่ล็อกอิน) -->
+    <div id="auth-section">
+        <div class="card">
+            <h3>สมัครสมาชิก</h3>
+            <input type="text" id="regUser" placeholder="ชื่อผู้ใช้ (Username)">
+            <input type="password" id="regPass" placeholder="รหัสผ่าน (Password)">
+            <input type="text" id="regName" placeholder="ชื่อ-นามสกุล (Name)">
+            <button onclick="register()">สมัครสมาชิก</button>
+        </div>
+
+        <div class="card">
+            <h3>เข้าสู่ระบบ</h3>
+            <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้ (Username)">
+            <input type="password" id="loginPass" placeholder="รหัสผ่าน (Password)">
+            <button onclick="login()">เข้าสู่ระบบ</button>
+        </div>
+    </div>
+
+    <!-- ส่วนหน้า Dashboard (แสดงหลังจากเข้าสู่ระบบสำเร็จ) -->
+    <div id="dashboard-section" class="card hidden">
+        <h3>ยินดีต้อนรับเข้าสู่ระบบ</h3>
+        <p>ชื่อผู้ใช้: <span id="userDisplayName" style="font-weight: bold; color: #007bff;"></span></p>
+        <p>ชื่อ-นามสกุล: <span id="userFullName" style="font-weight: bold; color: #28a745;"></span></p>
+        <button class="btn-danger" onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="card">
+        <h3>ผลลัพธ์การทำงาน</h3>
+        <p id="result" style="color: green;"></p>
+    </div>
+
+    <script>
+        async function register() {
+            const username = document.getElementById('regUser').value;
+            const password = document.getElementById('regPass').value;
+            const name = document.getElementById('regName').value;
+
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, name })
+            });
+            const data = await res.json();
+            const resultElement = document.getElementById('result');
+            if (res.ok) {
+                resultElement.style.color = 'green';
+                resultElement.innerText = data.message;
+            } else {
+                resultElement.style.color = 'red';
+                resultElement.innerText = data.error;
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const resultElement = document.getElementById('result');
+
+            if (res.ok) {
+                resultElement.style.color = 'green';
+                resultElement.innerText = data.message;
+                
+                // แสดงข้อมูลใน Dashboard และซ่อนฟอร์มล็อกอิน
+                document.getElementById('userDisplayName').innerText = data.username;
+                document.getElementById('userFullName').innerText = data.name;
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+            } else {
+                resultElement.style.color = 'red';
+                resultElement.innerText = data.error;
+            }
+        }
+
+        function logout() {
+            // ซ่อน Dashboard และแสดงฟอร์มล็อกอินกลับมา
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('result').style.color = 'green';
+            document.getElementById('result').innerText = 'ออกจากระบบเรียบร้อยแล้ว';
+            
+            // ล้างค่าในช่องกรอก
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+    </script>
+</body>
+</html>
